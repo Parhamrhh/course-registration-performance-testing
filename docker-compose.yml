@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Service
+  db:
+    image: postgres:15-alpine
+    container_name: course_registration_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: course_registration
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - course_registration_network
+
+  # FastAPI Application Service
+  api:
+    build: .
+    container_name: course_registration_api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8500 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8500:8500"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/course_registration
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - ENVIRONMENT=development
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - course_registration_network
+
+  # Locust Master Service (coordinates load testing)
+  locust-master:
+    image: locustio/locust:latest
+    container_name: course_registration_locust_master
+    ports:
+      - "8585:8089"  # Locust web UI
+    volumes:
+      - ./locustfiles:/mnt/locust
+    command: -f /mnt/locust/course_registration_tests.py --master --host=http://api:8500
+    depends_on:
+      - api
+    networks:
+      - course_registration_network
+
+  # Locust Worker Service (executes load tests)
+  locust-worker:
+    image: locustio/locust:latest
+    container_name: course_registration_locust_worker
+    volumes:
+      - ./locustfiles:/mnt/locust
+    command: -f /mnt/locust/course_registration_tests.py --worker --master-host=locust-master
+    depends_on:
+      - locust-master
+    networks:
+      - course_registration_network
+
+# Named volumes for data persistence
+volumes:
+  postgres_data:
+
+# Network for service communication
+networks:
+  course_registration_network:
+    driver: bridge
+
