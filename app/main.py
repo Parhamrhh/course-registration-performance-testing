@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
-from app.api.routes import auth
+from app.api.routes import auth, semesters, courses, registrations
 
 # Create database tables (in production, use Alembic migrations instead)
 # This is just for initial setup - we'll use Alembic for migrations
@@ -24,6 +24,9 @@ app = FastAPI(
 
 # Include routers
 app.include_router(auth.router)
+app.include_router(semesters.router)
+app.include_router(courses.router)
+app.include_router(registrations.router)
 
 # Configure CORS (Cross-Origin Resource Sharing)
 # In production, specify exact origins instead of "*"
