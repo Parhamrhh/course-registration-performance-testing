@@ -34,3 +34,16 @@ class MyCourse(BaseModel):
     class Config:
         from_attributes = True
 
+
+class RegisterResponse(BaseModel):
+    course_id: UUID
+    status: str
+    reserve_position: int | None = None
+
+
+class DropResponse(BaseModel):
+    course_id: UUID
+    dropped_status: str
+    promoted_student_id: str | None = None
+    promoted_from_position: int | None = None
+

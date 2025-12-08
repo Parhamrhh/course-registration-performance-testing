@@ -21,6 +21,8 @@ if str(ROOT_DIR) not in sys.path:
 from app.database import SessionLocal
 from app.models.semester import Semester
 from app.models.course import Course
+from app.models.student import Student
+from app.auth.utils import get_password_hash
 
 
 def get_or_create_semester(
@@ -62,6 +64,12 @@ def seed(db: Session) -> None:
             datetime(2026, 7, 1, 8, 0, tzinfo=timezone.utc),
             datetime(2026, 7, 3, 23, 0, tzinfo=timezone.utc),
         ),
+        (
+            # Testing window that includes "now" for interactive checks
+            "Testing Open Window",
+            datetime(2025, 12, 1, 0, 0, tzinfo=timezone.utc),
+            datetime(2025, 12, 31, 23, 59, tzinfo=timezone.utc),
+        ),
     ]
 
     semesters = {}
@@ -79,6 +87,8 @@ def seed(db: Session) -> None:
         ("Operating Systems", "Carol", "Tue/Thu 14:00-15:30", 50, 10, "Winter 2025"),
         ("Databases", "Dave", "Mon/Wed 13:00-14:30", 50, 10, "Summer 2026"),
         ("Computer Networks", "Eve", "Tue/Thu 09:00-10:30", 45, 10, "Summer 2026"),
+        ("Distributed Systems", "Frank", "Mon/Wed 15:00-16:30", 40, 10, "Testing Open Window"),
+        ("Concurrent Systems", "Grace", "Tue/Thu 15:00-16:00", 2, 2, "Testing Open Window"),  # small caps for concurrency tests
     ]
 
     for name, professor, schedule, max_cap, reserve_limit, semester_name in courses_data:
@@ -108,8 +118,43 @@ def seed(db: Session) -> None:
             )
             db.add(course)
 
+    # Students (multiple test users with same password "test123")
+    students_data = [
+        ("STU001", "Test Student"),
+        ("STU002", "Student Two"),
+        ("STU003", "Student Three"),
+        ("STU004", "Student Four"),
+        ("STU005", "Student Five"),
+        ("STU006", "Student Six"),
+        ("STU007", "Student Seven"),
+        ("STU008", "Student Eight"),
+        ("STU009", "Student Nine"),
+        ("STU010", "Student Ten"),
+    ]
+
+    for student_number, name in students_data:
+        student = (
+            db.query(Student)
+            .filter(Student.student_number == student_number)
+            .first()
+        )
+        pwd_hash = get_password_hash("test123")
+        if student:
+            student.name = name
+            student.password_hash = pwd_hash
+            db.add(student)
+        else:
+            db.add(
+                Student(
+                    id=uuid.uuid4(),
+                    student_number=student_number,
+                    name=name,
+                    password_hash=pwd_hash,
+                )
+            )
+
     db.commit()
-    print("Seeded semesters and courses.")
+    print("Seeded semesters, courses, and students.")
 
 
 if __name__ == "__main__":
