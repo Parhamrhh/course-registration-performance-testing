@@ -76,6 +76,11 @@ course-registration/
    docker-compose exec api alembic upgrade head
    ```
 
+5. **Seed a test student (STU001 / test123)**:
+   ```bash
+   docker-compose exec api python scripts/seed_student.py
+   ```
+
 5. **Access the services**:
    - API: http://localhost:8500
    - API Docs (Swagger): http://localhost:8500/docs

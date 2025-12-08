@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
+from app.api.routes import auth
 
 # Create database tables (in production, use Alembic migrations instead)
 # This is just for initial setup - we'll use Alembic for migrations
@@ -20,6 +21,9 @@ app = FastAPI(
     docs_url="/docs",  # Swagger UI
     redoc_url="/redoc",  # ReDoc
 )
+
+# Include routers
+app.include_router(auth.router)
 
 # Configure CORS (Cross-Origin Resource Sharing)
 # In production, specify exact origins instead of "*"
