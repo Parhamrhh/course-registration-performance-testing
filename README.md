@@ -12,7 +12,6 @@ A production-ready backend API for a university Semester-Based Course Registrati
 - **Performance Testing**: Locust
 - **Containerization**: Docker & Docker Compose
 
-
 ## Quick Start
 
 ### Prerequisites
@@ -117,6 +116,9 @@ docker-compose logs -f db
 - `POST /courses/{course_id}/register` - Register for a course
 - `POST /courses/{course_id}/drop` - Drop a course
 
+## Errors
+- Common: `400` invalid window / bad request, `401` unauthorized, `404` not found, `409` conflict (full or already registered).
+
 ## Database Schema
 
 ### Students
@@ -154,6 +156,23 @@ docker-compose logs -f db
 
 ## Performance Testing (Locust)
 
+## Structure
+- `locustfiles/course_registration_tests.py` — base user + scenario aliases
+- `locustfiles/scenarios/` — peak, race, reserve-queue, drop-auto-promotion
+- `locustfiles/configs/` — load, stress, spike, soak presets
+- `locustfiles/metrics/custom_metrics.py` — p95/p99, RPS, error rate
+- `locustfiles/scripts/run_tests.sh` — runner script
+
+## Running
+### Headless with presets
+```bash
+cd locustfiles
+./scripts/run_tests.sh load --headless
+./scripts/run_tests.sh stress --headless
+./scripts/run_tests.sh spike --headless
+./scripts/run_tests.sh soak --headless
+```
+
 - Locust UI: http://localhost:8585
 - Headless runner (presets):  
   ```bash
@@ -169,7 +188,23 @@ docker-compose logs -f db
     --class-picker "StudentUser:1,PeakLoadUser:2,RaceUser:2,ReserveQueueUser:2,DropPromotionUser:1" \
     --host=http://api:8500 --headless --users 100 --spawn-rate 10 --run-time 10m
   ```
-- Custom metrics (p95/p99, RPS, error rate) are logged at test end (`Custom Metrics Summary: {...}`).
+
+### Metrics
+- Custom metrics logged at test end (p95, p99, RPS, error rate).
+- Check Locust logs for the summary line: `Custom Metrics Summary: {...}`
+
+## Critical Scenarios
+- Peak load: normal high-load behavior.
+- Race condition: all users register the same course.
+- Reserve queue pressure: fill capacity then reserve.
+- Drop + auto-promotion: concurrent drops, promotion, and reserve shifts.
+
+## Data Prep
+- Seed students: `scripts/seed_students.py` (STU10000–STU10999, password `test123`)
+- Seed semesters/courses: `scripts/seed_semesters.py`, `scripts/seed_courses.py`
+- Ensure at least one semester window is open for registration.
+
+
 
 ## Environment Variables
 
