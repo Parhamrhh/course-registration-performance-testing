@@ -12,32 +12,6 @@ A production-ready backend API for a university Semester-Based Course Registrati
 - **Performance Testing**: Locust
 - **Containerization**: Docker & Docker Compose
 
-## Project Structure
-
-```
-course-registration/
-├── app/
-│   ├── __init__.py
-│   ├── main.py              # FastAPI application entry point
-│   ├── config.py             # Configuration management
-│   ├── database.py           # Database connection and session management
-│   ├── models/               # SQLAlchemy database models
-│   │   ├── student.py
-│   │   ├── semester.py
-│   │   ├── course.py
-│   │   └── course_registration.py
-│   ├── auth/                 # Authentication module (Phase 2)
-│   ├── api/                   # API routes (Phase 3-4)
-│   ├── schemas/               # Pydantic schemas (Phase 3-4)
-│   └── services/              # Business logic (Phase 4)
-├── alembic/                   # Database migrations
-│   └── versions/
-├── locustfiles/               # Locust performance tests (Phase 6-7)
-├── requirements.txt           # Python dependencies
-├── Dockerfile                 # API service container
-├── docker-compose.yml         # Multi-service orchestration
-└── README.md                  # This file
-```
 
 ## Quick Start
 
@@ -50,7 +24,7 @@ course-registration/
 
 1. **Clone the repository** (if applicable):
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Parhamrhh/course-registration-performance-testing.git
    cd course-registration
    ```
 
@@ -76,9 +50,14 @@ course-registration/
    docker-compose exec api alembic upgrade head
    ```
 
-5. **Seed a test student (STU001 / test123)**:
+5. **Seed data (students, semesters, courses)**:
    ```bash
-   docker-compose exec api python scripts/seed_student.py
+   # 1,000 students STU10000–STU10999, password: test123
+   docker-compose exec api python scripts/seed_students.py
+   # Additional semesters
+   docker-compose exec api python scripts/seed_semesters.py
+   # Additional courses
+   docker-compose exec api python scripts/seed_courses.py
    ```
 
 5. **Access the services**:
@@ -122,18 +101,18 @@ docker-compose logs -f db
 
 ## API Endpoints
 
-### Authentication (Phase 2)
+### Authentication
 - `POST /auth/login` - Student login
 
-### Semesters (Phase 3)
+### Semesters
 - `GET /semesters/` - List all semesters
 - `GET /semesters/{id}` - Get semester details
 
-### Courses (Phase 3)
+### Courses
 - `GET /semesters/{id}/courses` - List courses for a semester
 - `GET /courses/{id}` - Get course details
 
-### Registrations (Phase 3-4)
+### Registrations
 - `GET /semesters/{id}/my-courses` - Get student's courses
 - `POST /courses/{course_id}/register` - Register for a course
 - `POST /courses/{course_id}/drop` - Drop a course
@@ -173,9 +152,24 @@ docker-compose logs -f db
 - `created_at`, `updated_at` (Timestamps)
 - **Constraint**: UNIQUE(student_id, course_id)
 
-## Performance Testing
+## Performance Testing (Locust)
 
-Locust performance tests will be available in Phase 6-7. Access the Locust UI at http://localhost:8585 once services are running.
+- Locust UI: http://localhost:8585
+- Headless runner (presets):  
+  ```bash
+  cd locustfiles
+  ./scripts/run_tests.sh load --headless        # normal load
+  ./scripts/run_tests.sh stress --headless      # stress
+  ./scripts/run_tests.sh spike --headless       # spike
+  ./scripts/run_tests.sh soak --headless        # soak
+  ```
+- Custom mixes (class_picker aliases): `StudentUser, PeakLoadUser, RaceUser, ReserveQueueUser, DropPromotionUser`
+  ```bash
+  locust -f locustfiles/course_registration_tests.py \
+    --class-picker "StudentUser:1,PeakLoadUser:2,RaceUser:2,ReserveQueueUser:2,DropPromotionUser:1" \
+    --host=http://api:8500 --headless --users 100 --spawn-rate 10 --run-time 10m
+  ```
+- Custom metrics (p95/p99, RPS, error rate) are logged at test end (`Custom Metrics Summary: {...}`).
 
 ## Environment Variables
 
@@ -184,9 +178,6 @@ See `.env.example` for all available configuration options.
 Key variables:
 - `DATABASE_URL` - PostgreSQL connection string
 - `SECRET_KEY` - JWT secret key (change in production!)
+- `ALGORITHM` - JWT algorithm (default HS256)
 - `ACCESS_TOKEN_EXPIRE_MINUTES` - JWT token expiration time
-
-## License
-
-[Your License Here]
-
+- `ENVIRONMENT` - environment name (default development)

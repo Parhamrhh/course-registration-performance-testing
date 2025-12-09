@@ -100,53 +100,47 @@ class StudentUser(HttpUser):
 
 
 
-# from scenarios.peak_registration import PeakRegistrationUser
+from scenarios.peak_registration import PeakRegistrationUser
+from scenarios.race_condition import RaceConditionUser
+from scenarios.reserve_queue_pressure import ReserveQueuePressureUser
+from scenarios.drop_auto_promotion import DropAutoPromotionUser
 
-# class PeakLoadUser(PeakRegistrationUser):
-#     """
-#     Locust will run this class, which inherits all logic and tasks 
-#     from PeakRegistrationUser.
-#     """
-#     pass
-
-
-# from scenarios.race_condition import RaceConditionUser
-
-# class RaceUser(RaceConditionUser):
-#     """
-#     Locust will run this class, which inherits all logic and tasks 
-#     from RaceConditionUser.
-#     """
-#     pass
+# Aliases exposed for class_picker convenience
+class PeakLoadUser(PeakRegistrationUser):
+    """
+    High-load registration scenario (peak registration).
+    """
+    pass
 
 
-# from scenarios.reserve_queue_pressure import ReserveQueuePressureUser
-
-# class ReserveQueueUser(ReserveQueuePressureUser):
-#     """
-#     Locust will run this class, which inherits all logic and tasks 
-#     from ReserveQueuePressureUser.
-#     """
-#     pass
+class RaceUser(RaceConditionUser):
+    """
+    All users compete for the same course (race condition test).
+    """
+    pass
 
 
-# from scenarios.drop_auto_promotion import DropAutoPromotionUser
+class ReserveQueueUser(ReserveQueuePressureUser):
+    """
+    Reserve queue pressure test (fills capacity then reserve).
+    """
+    pass
 
-# class DropPromotionUser(DropAutoPromotionUser):
-#     """
-#     Locust will run this class, which inherits all logic and tasks 
-#     from DropAutoPromotionUser.
-#     """
-#     pass
+
+class DropPromotionUser(DropAutoPromotionUser):
+    """
+    Drop with auto-promotion scenario.
+    """
+    pass
 
 # How to run:
 # - Default (only StudentUser): no --class-picker needed.
 # - Single scenario: use --class-picker with weight 1, e.g.
 #     locust -f locustfiles/course_registration_tests.py \
-#       --class-picker "PeakRegistrationUser:1" --host=http://api:8500
+#       --class-picker "PeakLoadUser:1" --host=http://api:8500
 # - Mixed scenarios: supply multiple classes with weights, e.g.
 #     locust -f locustfiles/course_registration_tests.py \
-#       --class-picker "StudentUser:1,PeakRegistrationUser:2,RaceConditionUser:2,ReserveQueuePressureUser:2,DropAutoPromotionUser:1" \
+#       --class-picker "StudentUser:1,PeakLoadUser:2,RaceUser:2,ReserveQueueUser:2,DropPromotionUser:1" \
 #       --host=http://api:8500
 # - Headless example with config: see locustfiles/scripts/run_tests.sh
 # or register multiple classes in this file and use --headless --users N --spawn-rate R
