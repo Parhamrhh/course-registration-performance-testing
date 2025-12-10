@@ -60,7 +60,7 @@ class StudentUser(HttpUser):
             if self.semester_id:
                 self.course_ids = get_test_course_ids(self.client, self.semester_id, self.token)
     
-    @task(3)
+    @task(1)
     def view_semesters(self):
         """
         View all available semesters.
@@ -68,7 +68,7 @@ class StudentUser(HttpUser):
         headers = ensure_authenticated(self.client, self.token)
         self.client.get("/semesters/", headers=headers, name="View Semesters")
     
-    @task(2)
+    @task(3)
     def view_courses(self):
         """
         View courses for a semester.
@@ -83,7 +83,7 @@ class StudentUser(HttpUser):
             name="View Courses"
         )
     
-    @task(1)
+    @task(2)
     def view_my_courses(self):
         """
         View the student's registered courses.
